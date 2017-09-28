@@ -29,7 +29,7 @@ func main() {
 	twitter_config := oauth1.Config {
 		ConsumerKey:	os.Getenv("TWITTER_CONSUMER_KEY"),
 		ConsumerSecret:	os.Getenv("TWITTER_CONSUMER_SECRET"),
-		CallbackURL:	"http://192.168.1.7:8080/login/callback",
+		CallbackURL:	"http://localhost:8080/login/callback",
 		Endpoint:		twauth.AuthorizeEndpoint,
 	}
 	
