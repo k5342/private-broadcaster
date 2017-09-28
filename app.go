@@ -13,25 +13,8 @@ import (
 	twauth "github.com/dghubble/oauth1/twitter"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/joho/godotenv"
+	. "./models"
 )
-
-type User struct {
-	gorm.Model
-	ScreenName		string
-	Name			string
-	TwitterID		uint64
-	LastLoginedAt	time.Time
-}
-
-type Broadcast struct {
-	gorm.Model
-	StartedAt		time.Time
-	EndedAt			time.Time
-	User			User
-	RTMPURL			string
-	PublishURL		string
-	Password		string
-}
 
 func main() {
 	err := godotenv.Load()
@@ -115,16 +98,33 @@ func main() {
 			if err != nil {
 			}
 			
-			session.Set("id", user.ID)
+			session.Set("twitter_id", user.ID)
 			session.Set("screen_name", user.ScreenName)
 			session.Set("name", user.Name)
 			session.Set("is_login", true)
 			session.Save()
 			
+			u := User {
+				ScreenName:		user.ScreenName,
+				Name:			user.Name,
+				LastLoginedAt:	time.Now(),
+			}
+			
+			db.Where(User{TwitterID: user.ID}).FirstOrCreate(&u)
+			
 			c.Redirect(http.StatusFound, "/")
 		} else {
 			log.Fatal(err)
 		}
+	})
+	
+	r.GET("/logout", func(c *gin.Context) {
+		session:= sessions.Default(c)
+		session.Clear()
+		session.Set("is_login", false)
+		session.Save()
+		
+		c.Redirect(http.StatusFound, "/")
 	})
 
 	r.GET("/start", func(c *gin.Context) {

@@ -9,6 +9,7 @@
 	{{ if .is_login }}
 	<p>logged in as <strong>{{ .screen_name }}</strong></p>
 	<p><a href="/start">Start new broadcast</a>
+	<p><a href="/logout">Logout</a></p>
 	{{ else }}
 	<a href="/login">Login with Twitter</a>
 	{{ end }}
