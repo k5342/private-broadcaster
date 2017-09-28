@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Private Broadcaster</title>
+</head>
+<body>
+	<h1>Private Broadcaster</h1>
+	{{ if .is_login }}
+	<p>logged in as <strong>{{ .screen_name }}</strong></p>
+	<p><a href="/start">Start new broadcast</a>
+	{{ else }}
+	<a href="/login">Login with Twitter</a>
+	{{ end }}
+</body>
+</html>
