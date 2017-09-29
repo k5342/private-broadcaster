@@ -13,7 +13,7 @@ import (
 	twauth "github.com/dghubble/oauth1/twitter"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/joho/godotenv"
-	. "./models"
+	. "private-broadcaster/models"
 )
 
 func main() {

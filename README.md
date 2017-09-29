@@ -4,6 +4,7 @@
 * Go
 * Docker
 * Twitter ConsumerKey / ConsumerSecret
+* [glide](https://glide.sh/); for package management
 
 ## How to launch
 Copy .env.example to .env and write your appropriate
@@ -14,16 +15,9 @@ mv srv/.env.example src/
 vim src/.env
 ```
 
-Install go packages listed below:
+Install go packages using glide:
 ```
-github.com/gin-contrib/sessions
-github.com/gin-gonic/gin
-github.com/jinzhu/gorm
-github.com/jinzhu/gorm/dialects/sqlite
-github.com/dghubble/oauth1
-github.com/dghubble/oauth1/twitter
-github.com/dghubble/go-twitter/twitter
-github.com/joho/godotenv
+glide install
 ```
 
 Launch server following command:
