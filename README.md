@@ -11,8 +11,8 @@ Copy .env.example to .env and write your appropriate
 environment variables into src/.env
 
 ```
-mv srv/.env.example src/
-vim src/.env
+cp .env.example .env
+vim .env
 ```
 
 Install go packages using glide:
@@ -22,7 +22,6 @@ glide install
 
 Launch server following command:
 ```
-cd src
 go app.go
 ```
 
