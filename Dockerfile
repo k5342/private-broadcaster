@@ -39,9 +39,9 @@ RUN rm -rf $NGINX_VERSION $NGINX_VERSION.tar.gz
 
 RUN apk add --no-cache pcre ffmpeg
 
-ADD ./src/app /app/
-ADD ./src/.env /app/
-ADD ./src/templates /app/templates/
+ADD ./app /app/
+ADD ./.env /app/
+ADD ./templates /app/templates/
 ADD ./nginx.conf /etc/nginx/conf/
 
 # To run compiled golang binary on alpine linux
