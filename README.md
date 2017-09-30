@@ -8,7 +8,7 @@
 
 ## How to launch
 Copy .env.example to .env and write your appropriate
-environment variables into src/.env
+environment variables into .env
 
 ```
 cp .env.example .env
