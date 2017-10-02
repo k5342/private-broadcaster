@@ -1,4 +1,24 @@
-FROM alpine:3.5
+# use multi-stage build, require docker 17.05 later
+
+FROM golang:alpine3.6 as build-env
+
+RUN apk update \
+	&& apk add ca-certificates \
+	&& update-ca-certificates \
+	&& apk add openssl curl git gcc musl-dev
+
+RUN curl https://glide.sh/get | sh
+
+ADD . /go/src/private-broadcaster
+
+WORKDIR /go/src/private-broadcaster
+
+RUN glide install
+
+RUN GOOS=linux GOARCH=amd64 go build app.go
+
+
+FROM alpine:3.6
 
 ARG NGINX_VERSION=nginx-1.13.5
 ARG NGINX_RTMP_MODULE_VERSION=1.2.0
@@ -39,7 +59,7 @@ RUN rm -rf $NGINX_VERSION $NGINX_VERSION.tar.gz
 
 RUN apk add --no-cache pcre ffmpeg
 
-ADD ./app /app/
+COPY --from=build-env /go/src/private-broadcaster/app /app/
 ADD ./.env /app/
 ADD ./templates /app/templates/
 ADD ./nginx.conf /etc/nginx/conf/
