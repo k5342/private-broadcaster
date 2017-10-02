@@ -22,7 +22,7 @@ glide install
 
 Launch server following command:
 ```
-go app.go
+go run app.go
 ```
 
 ## How to deploy
