@@ -7,7 +7,7 @@
 * [glide](https://glide.sh/); for package management
 
 ## How to launch
-Copy .env.example to .env and write your appropriate
+Copy `.env.example` to `.env` and write your appropriate
 environment variables into .env
 
 ```
@@ -26,7 +26,7 @@ go app.go
 ```
 
 ## How to deploy
-compile .go files and docker image following command:
+compile `.go` files and docker image following command:
 
 ```shell
 make
