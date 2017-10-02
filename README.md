@@ -2,7 +2,7 @@
 
 ## Requirements
 * Go
-* Docker
+* Docker (requires 17.05 later)
 * Twitter ConsumerKey / ConsumerSecret
 * [glide](https://glide.sh/); for package management
 
@@ -38,7 +38,7 @@ Bind port 8080 on host machines to port 8080 on container.
 Now you can connect `localhost:8080` through your web browser.
 
 ```
-docker run -p 8080:8080 private-broadcaster:0.5
+docker run -p 8080:8080 private-broadcaster:0.6
 ```
 
 ## TODO
