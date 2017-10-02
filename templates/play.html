@@ -3,10 +3,23 @@
 <head>
 	<meta charset="UTF-8">
 	<title>{{ .screen_name }}'s broadcast - Private Broadcaster</title>
+	<head>
+		<link href="http://vjs.zencdn.net/4.2.0/video-js.css" rel="stylesheet">
+		<script src="http://vjs.zencdn.net/4.2.0/video.js"></script>
+	</head>
 </head>
 <body>
 	<h1>{{ .screen_name }}'s broadcast</h1>
 	broadcast_status: {{ .broadcast_status }}<br />
 	is_viewable: {{ .is_viewable }}
+	<video id="live test" class="video-js vjs-default-skin" controls autoplay
+	preload="auto" width="640" height="360" data-setup='{}'>
+	 <source src="hls/<適当なkey>.m3u8" type='application/x-mpegURL'>
+	 <source src="rtmp://localhost/src/key" type='rtmp/mp4'>
+	 <p class="vjs-no-js">
+		 To view this video please enable JavaScript, and consider upgrading to a web browser
+		 that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+	 </p>
+ </video>
 </body>
 </html>
