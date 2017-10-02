@@ -6,7 +6,7 @@
 * Twitter ConsumerKey / ConsumerSecret
 * [glide](https://glide.sh/); for package management
 
-## How to launch
+## How to launch Web app
 Copy `.env.example` to `.env` and write your appropriate
 environment variables into .env
 
@@ -25,7 +25,9 @@ Launch server following command:
 go run app.go
 ```
 
-## How to deploy
+Now, you can connect through your web browser `localhost:8080`
+
+## How to launch Web app and nginx with *nginx-rtmp-module*
 compile `.go` files and docker image following command:
 
 ```shell
