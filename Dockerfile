@@ -2,18 +2,12 @@
 
 FROM golang:alpine3.6 as build-env
 
-RUN apk update \
-	&& apk add ca-certificates \
-	&& update-ca-certificates \
-	&& apk add openssl curl git gcc musl-dev
-
-RUN curl https://glide.sh/get | sh
-
 ADD . /go/src/private-broadcaster
 
 WORKDIR /go/src/private-broadcaster
 
-RUN glide install
+RUN apk update \
+	&& apk add g++ musl-dev
 
 RUN GOOS=linux GOARCH=amd64 go build app.go
 
