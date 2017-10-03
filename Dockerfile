@@ -35,7 +35,6 @@ RUN wget https://github.com/arut/nginx-rtmp-module/archive/v$NGINX_RTMP_MODULE_V
 RUN apk add --no-cache $PACKAGES 
 
 RUN ./configure \
-		--with-debug \
 		--prefix=/usr/share/nginx \
 		--sbin-path=/usr/local/sbin/nginx \
 		--conf-path=/etc/nginx/conf/nginx.conf \

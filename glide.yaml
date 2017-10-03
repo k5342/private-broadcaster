@@ -16,4 +16,3 @@ import:
   - dialects/sqlite
 - package: github.com/joho/godotenv
   version: ^1.2.0
-- package: github.com/thanhpk/randstr

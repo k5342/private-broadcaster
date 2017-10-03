@@ -15,9 +15,10 @@ type User struct {
 
 type Broadcast struct {
 	gorm.Model
-	StartedAt		*time.Time // Nullable when not started
-	EndedAt			*time.Time // Nullable
+	StartedAt		time.Time
+	EndedAt			time.Time
 	User			User
-	RTMPName		string
+	RTMPURL			string
+	PublishURL		string
 	Password		string
 }
