@@ -13,8 +13,18 @@ import (
 	twauth "github.com/dghubble/oauth1/twitter"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/joho/godotenv"
+	"github.com/thanhpk/randstr"
 	. "private-broadcaster/models"
 )
+
+func GetCurrentUser(db *gorm.DB, session sessions.Session) User {
+	var twitter_id = session.Get("twitter_id").(int64)
+	var user User
+	
+	db.Where(User{TwitterID: twitter_id}).First(&user)
+	
+	return user
+}
 
 func main() {
 	err := godotenv.Load()
@@ -126,12 +136,88 @@ func main() {
 		
 		c.Redirect(http.StatusFound, "/")
 	})
-
+	
 	r.GET("/start", func(c *gin.Context) {
+//		session := sessions.Default(c)
+		
+		c.HTML(http.StatusOK, "start.html", gin.H{
+			"csrf_token": "stub",
+		})
 	})
+
+	r.POST("/create", func(c *gin.Context) {
+		session:= sessions.Default(c)
+		
+		u := GetCurrentUser(db, session)
+		
+		var b Broadcast
+		err := db.Model(&u).
+					Not(Broadcast{EndedAt: nil}).
+					Order("created_at desc").
+					First(&b).
+					Error
+		
+		if err == nil {
+			// already started broadcast
+			c.Redirect(http.StatusFound, "/create/done?reason=duplicate")
+		}
+		
+		err = db.Create(&Broadcast{
+			User:		u,
+			RTMPName:	randstr.RandomHex(16),
+			Password:	c.PostForm("password"),
+		}).Error
+		
+		if err != nil {
+			log.Fatal(err)
+		}
+		
+		c.Redirect(http.StatusFound, "/create/done")
+	})
+	
+	r.GET("/create/done", func(c *gin.Context) {
+		session:= sessions.Default(c)
+		
+		u := GetCurrentUser(db, session)
+		
+		var b Broadcast
+		err := db.Model(&u).
+					Not(Broadcast{EndedAt: nil}).
+					Order("created_at desc").
+					First(&b).
+					Error
+		
+		if err == nil {
+			c.HTML(http.StatusOK, "done.html", gin.H{
+				"host": "b.ksswre.net",
+				"rtmp_endpoint": "rtmp://b.ksswre.net/hls",
+				"screen_name": u.ScreenName,
+				"stream_key": b.RTMPName,
+			})
+		} else {
+			log.Print(err)
+			c.Redirect(http.StatusFound, "/")
+		}
+	})
+	
 	
 	r.GET("/live/:screen_name", func(c *gin.Context) {
 //		screen_name := c.Param("screen_name")
+	})
+
+	r.POST("/api/on_publish", func(c *gin.Context) {
+		var name = c.PostForm("name")
+		
+		var b Broadcast
+		err := db.Where(Broadcast{RTMPName: name}).First(&b).Error
+		
+		if err != nil {
+			log.Print(err)
+			c.String(403, "Access not allowed.")
+			return
+		}
+		
+		c.String(200, "OK.")
 	})
 	
 	r.Run()

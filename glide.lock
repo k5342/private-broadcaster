@@ -1,5 +1,5 @@
-hash: 5a43f20598fe520d33885cface2821d4026675215008148686fd26e29709fe84
-updated: 2017-09-29T17:03:27.830538822+09:00
+hash: 8bc684bafe2152bce7a6feef3adb4abaa6b4ea975b8232e8ca010ddc5ebcb750
+updated: 2017-10-03T17:35:37.364113581+09:00
 imports:
 - name: github.com/boj/redistore
   version: 4562487a4bee9a7c272b72bfaeda4917d0a47ab9
@@ -63,6 +63,8 @@ imports:
   version: a5cdd64afdee435007ee3e9f6ed4684af949d568
 - name: github.com/mattn/go-sqlite3
   version: 5160b48509cf5c877bc22c11c373f8c7738cdb38
+- name: github.com/thanhpk/randstr
+  version: 6db3bbcfa460acbc7220018a86428852e9b7f507
 - name: github.com/ugorji/go
   version: 54210f4e076c57f351166f0ed60e67d3fca57a36
   subpackages:
