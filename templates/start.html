@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>New broadcast - Private Broadcaster</title>
+</head>
+<body>
+	<h1>Create new broadcast</h1>
+	<form action="/create" method="post">
+		<fieldset>
+			<label>Viewer Password</label>
+			<input type="plain" name="password" title="view password" />
+		</fieldset>
+		<fieldset>
+			<label>Password Authentication Only (not implemented)</label>
+			<input type="checkbox" name="password_only" title="disable access control using Twitter" disabled />
+		</fieldset>
+		<input type="hidden" name="_csrf" value="{{ .csrf_token }}">
+		<button type="submit">Start Broadcast</button>
+	</form>
+</body>
+</html>

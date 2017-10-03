@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Broadcast Started - Private Broadcaster</title>
+</head>
+<body>
+	<h1>Broadcasting Started</h1>
+	<section>
+		Now you can view your broadcast:
+		<a href="//{{ .host }}/{{ .screen_name }}">{{ .host }}/{{ .screen_name }}</a>
+	</section>
+	<section>
+		<h3>Connection Info</h3>
+		<p>Broadcast URL: <span>{{ .rtmp_endpoint }}</span></p>
+		<p>Stream Key: <span>{{ .stream_key}}</span></p>
+		<p><strong>Attention:</strong> DO NOT SHARE connection info</p>
+	</section>
+</body>
+</html>
