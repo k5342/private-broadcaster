@@ -17,31 +17,82 @@ import (
 	. "private-broadcaster/models"
 )
 
+var twitter_config oauth1.Config
+
 func GetCurrentUser(db *gorm.DB, session sessions.Session) User {
 	var twitter_id = session.Get("twitter_id").(int64)
 	var user User
-	
 	db.Where(User{TwitterID: twitter_id}).First(&user)
-	
 	return user
+}
+
+func GetUserByScreenName(db *gorm.DB, screen_name string) User {
+	var user User
+	db.Where(User{ScreenName: screen_name}).Order("updated_at DESC").First(&user)
+	return user
+}
+
+func GetLatestBroadcastByScreenName(db *gorm.DB, screen_name string) Broadcast {
+	var broadcast Broadcast
+	var u = GetUserByScreenName(db, screen_name)
+	db.Model(&u).Order("created_at DESC").First(&broadcast)
+	return broadcast
+}
+
+func CheckCanPlay(db *gorm.DB, session sessions.Session, broadcast_user_screen_name string) bool {
+	b := GetLatestBroadcastByScreenName(db, broadcast_user_screen_name)
+	
+	cu := session.Get("current_user")
+	
+	if cu == nil {
+		return false
+	} else {
+		return cu.(CurrentUser).PlayableBroadcasts[b.ID]
+	}
+}
+
+func TwitterClient(session sessions.Session) *twitter.Client {
+	accessToken := session.Get("access_token").(string)
+	accessSecret := session.Get("access_secret").(string)
+	
+	token := oauth1.NewToken(accessToken, accessSecret)
+	httpClient := twitter_config.Client(oauth1.NoContext, token)
+	return twitter.NewClient(httpClient)
+}
+
+func AuthorizeBroadcast(db *gorm.DB, session sessions.Session, broadcast Broadcast) {
+	cu := session.Get("current_user")
+	
+	if cu == nil {
+		return
+	} else {
+		cu.(CurrentUser).PlayableBroadcasts[broadcast.ID] = true
+		session.Set("current_user", cu)
+		session.Save()
+	}
+}
+
+type CurrentUser struct {
+	Test int
+	PlayableBroadcasts map[uint]bool
 }
 
 func main() {
 	err := godotenv.Load()
+	
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	
-	db, _ := gorm.Open("sqlite3", "./database.db")
-	db.AutoMigrate(&User{}, &Broadcast{})
-	defer db.Close()
-	
-	twitter_config := oauth1.Config {
+	twitter_config = oauth1.Config {
 		ConsumerKey:	os.Getenv("TWITTER_CONSUMER_KEY"),
 		ConsumerSecret:	os.Getenv("TWITTER_CONSUMER_SECRET"),
 		CallbackURL:	"http://localhost:8080/login/callback",
 		Endpoint:		twauth.AuthorizeEndpoint,
 	}
+	
+	db, _ := gorm.Open("sqlite3", "./database.db")
+	db.AutoMigrate(&User{}, &Broadcast{})
+	defer db.Close()
 	
 	r := gin.Default()
 	store := sessions.NewCookieStore([]byte("secret"))
@@ -51,6 +102,13 @@ func main() {
 	
 	r.GET("/", func(c *gin.Context) {
 		session := sessions.Default(c)
+		
+		cu := session.Get("current_user")
+		
+		if cu != nil {
+			log.Printf("#g", cu.(CurrentUser))
+		}
+			
 		
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"is_login": session.Get("is_login"),
@@ -67,18 +125,21 @@ func main() {
 	r.GET("/login", func(c *gin.Context) {
 		session := sessions.Default(c)
 		
+		log.Printf("%#v", twitter_config)
 		requestToken, requestSecret, err := twitter_config.RequestToken()
-		session.Set("request_token", requestToken)
-		session.Set("request_secret", requestSecret)
-		session.Save()
 		
 		if err != nil {
 			log.Fatal(err)
 		}
 		
+		session.Set("request_token", requestToken)
+		session.Set("request_secret", requestSecret)
+		session.Save()
+		
 		authorizationURL, err := twitter_config.AuthorizationURL(requestToken)
 		
 		if err != nil {
+			log.Print(2)
 			log.Fatal(err)
 		}
 		
@@ -98,12 +159,10 @@ func main() {
 		if err == nil {
 			session.Set("access_token", accessToken)
 			session.Set("access_secret", accessSecret)
+			log.Printf("%#v", session)
 			session.Save()
 			
-			token := oauth1.NewToken(accessToken, accessSecret)
-			httpClient := twitter_config.Client(oauth1.NoContext, token)
-			client := twitter.NewClient(httpClient)
-			user, _, err := client.Accounts.VerifyCredentials(nil)
+			user, _, err := TwitterClient(session).Accounts.VerifyCredentials(nil)
 			
 			if err != nil {
 			}
@@ -112,6 +171,11 @@ func main() {
 			session.Set("screen_name", user.ScreenName)
 			session.Set("name", user.Name)
 			session.Set("is_login", true)
+			session.Save()
+			
+			session.Set("current_user", CurrentUser{
+				PlayableBroadcasts: make(map[uint]bool),
+			})
 			session.Save()
 			
 			u := User {
@@ -202,9 +266,62 @@ func main() {
 	
 	
 	r.GET("/live/:screen_name", func(c *gin.Context) {
-//		screen_name := c.Param("screen_name")
+		screen_name := c.Param("screen_name")
+		session:= sessions.Default(c)
+		if CheckCanPlay(db, session, screen_name) {
+			c.HTML(http.StatusOK, "play.html", gin.H{
+				"is_login": session.Get("is_login"),
+				"screen_name": session.Get("screen_name"),
+			})
+		} else {
+			c.Redirect(http.StatusFound, "/live/" + screen_name + "/auth")
+		}
 	})
-
+	
+	r.GET("/live/:screen_name/auth", func(c *gin.Context) {
+		screen_name := c.Param("screen_name")
+		session:= sessions.Default(c)
+		
+		if CheckCanPlay(db, session, screen_name) {
+			c.Redirect(http.StatusFound, "./")
+		} else {
+			b := GetLatestBroadcastByScreenName(db, screen_name)
+			
+			// try auth by twitter
+			rs, _, err := TwitterClient(session).Friendships.Show(&twitter.FriendshipShowParams{
+				SourceID: GetCurrentUser(db, session).TwitterID,
+				TargetID: b.User.TwitterID,
+			})
+			
+			if err != nil {
+				log.Print(err)
+			}
+			
+			if rs.Target.Following == true {
+				AuthorizeBroadcast(db, session, b)
+				c.Redirect(http.StatusFound, "./")
+			}
+			
+			// otherwise use password auth
+			if b.Password != "" {
+				c.HTML(http.StatusOK, "auth.html", gin.H{
+					"broadcast": b,
+				})
+			}
+		}
+	})
+	
+	r.GET("/video/:screen_name", func(c *gin.Context) {
+		screen_name := c.Param("screen_name")
+		session:= sessions.Default(c)
+		
+		if CheckCanPlay(db, session, screen_name) {
+			// do something
+		} else {
+			c.AbortWithStatus(403)
+		}
+	})
+	
 	r.POST("/api/on_publish", func(c *gin.Context) {
 		var name = c.PostForm("name")
 		
