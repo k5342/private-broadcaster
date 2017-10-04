@@ -18,6 +18,7 @@ type Broadcast struct {
 	StartedAt		*time.Time // Nullable when not started
 	EndedAt			*time.Time // Nullable
 	User			User
+	UserID			int
 	RTMPName		string
 	Password		string
 }

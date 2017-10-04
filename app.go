@@ -152,14 +152,18 @@ func main() {
 		
 		var b Broadcast
 		err := db.Model(&u).
+					Related(&b).
 					Not(Broadcast{EndedAt: nil}).
 					Order("created_at desc").
-					First(&b).
+					Limit(1).
 					Error
 		
 		if err == nil {
 			// already started broadcast
 			c.Redirect(http.StatusFound, "/create/done?reason=duplicate")
+			return
+		} else {
+			log.Print(err)
 		}
 		
 		err = db.Create(&Broadcast{
@@ -182,9 +186,10 @@ func main() {
 		
 		var b Broadcast
 		err := db.Model(&u).
+					Related(&b).
 					Not(Broadcast{EndedAt: nil}).
 					Order("created_at desc").
-					First(&b).
+					Limit(1).
 					Error
 		
 		if err == nil {
