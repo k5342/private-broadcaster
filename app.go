@@ -35,19 +35,21 @@ func GetUserByScreenName(db *gorm.DB, screen_name string) User {
 func GetLatestBroadcastByScreenName(db *gorm.DB, screen_name string) Broadcast {
 	var broadcast Broadcast
 	var u = GetUserByScreenName(db, screen_name)
-	db.Model(&u).Order("created_at DESC").First(&broadcast)
+	db.Preload("User").Model(&u).Order("created_at DESC").First(&broadcast)
 	return broadcast
 }
 
 func CheckCanPlay(db *gorm.DB, session sessions.Session, broadcast_user_screen_name string) bool {
+	u := GetCurrentUser(db, session)
 	b := GetLatestBroadcastByScreenName(db, broadcast_user_screen_name)
 	
-	cu := session.Get("current_user")
+	var ba BroadcastApproval
+	err := db.Debug().Where(&BroadcastApproval{BroadcastID: b.ID, UserID: u.ID}).Find(&ba).Error
 	
-	if cu == nil {
-		return false
+	if err == nil {
+		return true
 	} else {
-		return cu.(CurrentUser).PlayableBroadcasts[b.ID]
+		return false
 	}
 }
 
@@ -61,15 +63,12 @@ func TwitterClient(session sessions.Session) *twitter.Client {
 }
 
 func AuthorizeBroadcast(db *gorm.DB, session sessions.Session, broadcast Broadcast) {
-	cu := session.Get("current_user")
+	u := GetCurrentUser(db, session)
 	
-	if cu == nil {
-		return
-	} else {
-		cu.(CurrentUser).PlayableBroadcasts[broadcast.ID] = true
-		session.Set("current_user", cu)
-		session.Save()
-	}
+	db.Create(&BroadcastApproval{
+		Broadcast: broadcast,
+		User: u,
+	})
 }
 
 type CurrentUser struct {
@@ -91,7 +90,7 @@ func main() {
 	}
 	
 	db, _ := gorm.Open("sqlite3", "./database.db")
-	db.AutoMigrate(&User{}, &Broadcast{})
+	db.AutoMigrate(&User{}, &Broadcast{}, &BroadcastApproval{})
 	defer db.Close()
 	
 	r := gin.Default()
@@ -289,6 +288,7 @@ func main() {
 		
 		if CheckCanPlay(db, session, screen_name) {
 			c.Redirect(http.StatusFound, "./")
+			return
 		} else {
 			b := GetLatestBroadcastByScreenName(db, screen_name)
 			
@@ -302,16 +302,21 @@ func main() {
 				log.Print(err)
 			}
 			
-			if rs.Target.Following == true {
+			if rs.Source.CanDM == true {
 				AuthorizeBroadcast(db, session, b)
 				c.Redirect(http.StatusFound, "./")
+				return
 			}
 			
 			// otherwise use password auth
-			if b.Password != "" {
+			if b.Password == "" {
+				c.String(403, "You are not allowed to play this broadcast.")
+				return
+			} else {
 				c.HTML(http.StatusOK, "auth.html", gin.H{
 					"broadcast": b,
 				})
+				return
 			}
 		}
 	})
