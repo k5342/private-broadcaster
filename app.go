@@ -74,11 +74,6 @@ func AuthorizeBroadcast(db *gorm.DB, session sessions.Session, broadcast Broadca
 	})
 }
 
-type CurrentUser struct {
-	Test int
-	PlayableBroadcasts map[uint]bool
-}
-
 func main() {
 	err := godotenv.Load()
 	
@@ -104,13 +99,6 @@ func main() {
 	
 	r.GET("/", func(c *gin.Context) {
 		session := sessions.Default(c)
-		
-		cu := session.Get("current_user")
-		
-		if cu != nil {
-			log.Printf("#g", cu.(CurrentUser))
-		}
-			
 		
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"is_login": session.Get("is_login"),
@@ -175,18 +163,11 @@ func main() {
 			session.Set("is_login", true)
 			session.Save()
 			
-			session.Set("current_user", CurrentUser{
-				PlayableBroadcasts: make(map[uint]bool),
-			})
-			session.Save()
-			
-			u := User {
+			db.Where(User{TwitterID: user.ID}).FirstOrCreate(&User{
 				ScreenName:		user.ScreenName,
 				Name:			user.Name,
 				LastLoginedAt:	time.Now(),
-			}
-			
-			db.Where(User{TwitterID: user.ID}).FirstOrCreate(&u)
+			})
 			
 			c.Redirect(http.StatusFound, "/")
 		} else {
