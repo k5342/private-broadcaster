@@ -5,6 +5,9 @@ import (
 	"time"
 	"os"
 	"log"
+	"io/ioutil"
+	"bytes"
+	"strings"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -326,9 +329,36 @@ func main() {
 		session:= sessions.Default(c)
 		
 		if CheckCanPlay(db, session, screen_name) {
-			// do something
+			b := GetLatestBroadcastByScreenName(db, screen_name)
+			c.Header("Content-Type", "application/x-mpegURL")
+			c.Header("Access-Control-Allow-Origin", "*")
+			
+			input, err := ioutil.ReadFile("/tmp/hls/" + b.RTMPName + ".m3u8")
+			if err != nil {
+				c.AbortWithStatus(404)
+				return
+			}
+			
+			data := bytes.Replace(input, []byte(b.RTMPName), []byte("/video/" + screen_name + "/" + screen_name), -1)
+			
+			c.String(200, string(data))
+			return
 		} else {
 			c.AbortWithStatus(403)
+			return
+		}
+	})
+	
+	r.GET("/video/:screen_name/:file_name", func(c *gin.Context) {
+		session:= sessions.Default(c)
+		
+		screen_name := c.Param("screen_name")
+		file_name := c.Param("file_name")
+		
+		b := GetLatestBroadcastByScreenName(db, screen_name)
+		
+		if CheckCanPlay(db, session, screen_name) {
+			c.File("/tmp/hls/" + strings.Replace(file_name, screen_name, b.RTMPName, -1))
 		}
 	})
 	

@@ -4,22 +4,26 @@
 	<meta charset="UTF-8">
 	<title>{{ .screen_name }}'s broadcast - Private Broadcaster</title>
 	<head>
-		<link href="//vjs.zencdn.net/4.2.0/video-js.css" rel="stylesheet">
-		<script src="//vjs.zencdn.net/4.2.0/video.js"></script>
+		<script src="//cdn.jsdelivr.net/npm/hls.js@latest"></script>
 	</head>
 </head>
 <body>
-	<h1>{{ .screen_name }}'s broadcast</h1>
-	broadcast_status: {{ .broadcast_status }}<br />
-	is_viewable: {{ .is_viewable }}
-	<video id="live test" class="video-js vjs-default-skin" controls autoplay
-	preload="auto" width="640" height="360" data-setup='{}'>
-	 <source src="hls/<適当なkey>.m3u8" type='application/x-mpegURL'>
-	 <source src="rtmp://localhost/src/key" type='rtmp/mp4'>
-	 <p class="vjs-no-js">
-		 To view this video please enable JavaScript, and consider upgrading to a web browser
-		 that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
-	 </p>
- </video>
+	<section>
+		<h2>{{ .screen_name }}'s broadcast</h2>
+		<section>
+			<video id="video"></video>
+		</section>
+	</section>
 </body>
+<script>
+	if(Hls.isSupported()) {
+		var video = document.getElementById('video');
+		var hls = new Hls();
+		hls.loadSource('/video/{{ .screen_name }}');
+		hls.attachMedia(video);
+		hls.on(Hls.Events.MANIFEST_PARSED,function() {
+			video.play();
+		});
+	}
+</script>
 </html>
