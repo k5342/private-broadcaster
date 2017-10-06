@@ -18,7 +18,15 @@ type Broadcast struct {
 	StartedAt		*time.Time // Nullable when not started
 	EndedAt			*time.Time // Nullable
 	User			User
-	UserID			int
+	UserID			uint
 	RTMPName		string
 	Password		string
+}
+
+type BroadcastApproval struct {
+	gorm.Model
+	Broadcast		Broadcast
+	BroadcastID		uint
+	User			User
+	UserID			uint
 }
