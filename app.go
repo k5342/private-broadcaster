@@ -258,8 +258,7 @@ func main() {
 		session:= sessions.Default(c)
 		if CheckCanPlay(db, session, screen_name) {
 			c.HTML(http.StatusOK, "play.html", gin.H{
-				"is_login": session.Get("is_login"),
-				"screen_name": session.Get("screen_name"),
+				"screen_name": screen_name,
 			})
 		} else {
 			c.Redirect(http.StatusFound, "/live/" + screen_name + "/auth")
