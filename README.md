@@ -12,7 +12,7 @@ environment variables into `.env`
 
 ```
 cp .env.example .env
-vim .env
+nano .env
 ```
 
 Install go packages using glide:
